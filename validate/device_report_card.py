@@ -45,11 +45,13 @@ def run(max_subjects: int | None = None, verbose: bool = True) -> dict:
     out: dict = {
         "description": "Per-device artifact susceptibility, from simultaneous recordings",
         "caveat": (
-            "30 subjects, one laboratory, one session. Blink amplitude depends "
-            "on electrode placement and reference, both of which differ between "
-            "these devices by design -- that is what is being measured, but it "
-            "means the numbers describe these recordings rather than the "
-            "hardware in the abstract."
+            "Thirty people, one laboratory, one session. Blink size depends on "
+            "where the electrodes sit and what they are measured against, and "
+            "those differ between these headsets by design. That difference is "
+            "exactly what is being measured here, but it does mean these numbers "
+            "describe these recordings rather than the hardware in general. The "
+            "published dataset also had its noisiest recordings removed before "
+            "release, so real world files will be worse than these."
         ),
         "devices": {},
     }
