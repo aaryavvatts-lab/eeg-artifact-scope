@@ -53,7 +53,9 @@ Headline, measured against 30 subjects performing *cued* artifacts:
 
 ## Usage
 
-Web: drop a file on the deployed site — nothing is uploaded.
+**Live: <https://eeg-artifact-scope.vercel.app>** — drop a file in; nothing is
+uploaded. The Python runtime is fetched from a CDN on first load (~15 s), after
+which analysis is local and instant.
 
 Locally, for formats the browser cannot read (`.fif`, BrainVision, BIDS) or for
 batch runs:

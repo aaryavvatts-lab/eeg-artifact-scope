@@ -33,3 +33,6 @@ cd web
 npm ci --silent 2>/dev/null || npm install --silent
 npm run build
 echo "==> Done. Static site in web/out/"
+echo
+echo "Vercel project root directory must be set to 'web'."
+echo "Deploy: cd web && vercel deploy --prod"

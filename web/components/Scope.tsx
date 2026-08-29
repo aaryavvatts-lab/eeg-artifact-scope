@@ -68,8 +68,19 @@ export default function Scope() {
   );
 
   const loadSample = useCallback(async () => {
-    const res = await fetch(SAMPLE_URL);
-    run(await res.arrayBuffer(), 'sample-muse2-blink.edf');
+    try {
+      const res = await fetch(SAMPLE_URL);
+      if (!res.ok) throw new Error(`sample unavailable (HTTP ${res.status})`);
+      run(await res.arrayBuffer(), 'sample-muse2-blink.edf');
+    } catch (err) {
+      setPhase('error');
+      setFilename('the sample recording');
+      setError({
+        message:
+          'The sample recording could not be loaded. You can still drop in your own EDF, BDF or EEGLAB .set file.',
+        detail: String(err),
+      });
+    }
   }, [run]);
 
   const busy = phase === 'working';
@@ -186,7 +197,9 @@ export default function Scope() {
         </p>
         <p>
           Your recording is read into memory in this tab and never uploaded. There is no
-          server to upload it to — this page is a static file.
+          server to upload it to — this page is a static file. The Python runtime
+          (Pyodide) is fetched from a CDN on first load, so that host sees the runtime
+          request; it never sees your data.
         </p>
       </footer>
     </main>
