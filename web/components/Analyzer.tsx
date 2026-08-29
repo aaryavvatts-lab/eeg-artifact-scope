@@ -4,9 +4,12 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Analysis, ArtifactEvent, DetectorOut } from '@/lib/types';
 import { KIND_COLOR, LineChart, TraceStrip, scoreColor } from '@/components/Viz';
+import { SampleCheck, SamplePicker, type SampleEntry } from '@/components/SamplePicker';
 
-const WHEEL_URL = '/wheels/eeg_artifact_scope-0.1.0-py3-none-any.whl';
-const SAMPLE_URL = '/sample-muse2-blink.edf';
+// The wheel filename carries a content hash so it can be cached immutably.
+// scripts/stage_wheel.py writes this pointer; the fallback only matters if that
+// file is missing, in which case the worker reports a clear error.
+const WHEEL_POINTER = '/wheels/current.json';
 
 const STEPS = [
   ['runtime', 'Start the Python runtime'],
@@ -27,6 +30,10 @@ export default function Analyzer() {
   const [error, setError] = useState<{ message: string; detail: string } | null>(null);
   const [over, setOver] = useState(false);
   const [filename, setFilename] = useState('');
+  // Set only when the file came from the example list, so the result can be
+  // checked against the score that file is known to produce.
+  const [sample, setSample] = useState<SampleEntry | null>(null);
+  const wheelRef = useRef<string | null>(null);
 
   useEffect(() => {
     const w = new Worker('/analysis-worker.js');
@@ -44,18 +51,39 @@ export default function Analyzer() {
         setPhase('error');
       }
     };
+    fetch(WHEEL_POINTER)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d) => {
+        wheelRef.current = d.url;
+      })
+      .catch(() => {
+        wheelRef.current = null;
+      });
+
     return () => w.terminate();
   }, []);
 
-  const run = useCallback((buffer: ArrayBuffer, name: string) => {
+  const run = useCallback((buffer: ArrayBuffer, name: string, from: SampleEntry | null = null) => {
     setPhase('working');
     setAnalysis(null);
     setError(null);
     setFilename(name);
+    setSample(from);
     setStage('runtime');
     setDetail('Starting');
+
+    if (!wheelRef.current) {
+      setPhase('error');
+      setError({
+        message:
+          'The analysis package could not be located, so nothing was run. Reloading the page usually fixes it.',
+        detail: `Could not read ${WHEEL_POINTER}`,
+      });
+      return;
+    }
+
     workerRef.current?.postMessage(
-      { cmd: 'analyse', buffer, filename: name, wheelUrl: WHEEL_URL },
+      { cmd: 'analyse', buffer, filename: name, wheelUrl: wheelRef.current },
       [buffer],
     );
   }, []);
@@ -64,22 +92,6 @@ export default function Analyzer() {
     async (file: File) => run(await file.arrayBuffer(), file.name),
     [run],
   );
-
-  const loadSample = useCallback(async () => {
-    try {
-      const res = await fetch(SAMPLE_URL);
-      if (!res.ok) throw new Error(`sample unavailable (HTTP ${res.status})`);
-      run(await res.arrayBuffer(), 'sample-muse2-blink.edf');
-    } catch (err) {
-      setPhase('error');
-      setFilename('the sample recording');
-      setError({
-        message:
-          'The sample would not load. You can still drop in your own EDF, BDF or EEGLAB file.',
-        detail: String(err),
-      });
-    }
-  }, [run]);
 
   const busy = phase === 'working';
   const stepIndex = STEPS.findIndex(([k]) => k === stage);
@@ -124,19 +136,6 @@ export default function Analyzer() {
             if (f) onFile(f);
           }}
         />
-        {!busy && (
-          <div className="cta-row" style={{ justifyContent: 'center' }}>
-            <button
-              className="btn ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                loadSample();
-              }}
-            >
-              No file handy? Use a real Muse 2 recording
-            </button>
-          </div>
-        )}
         {busy && (
           <ul className="steps">
             {STEPS.map(([key, label], i) => (
@@ -173,12 +172,26 @@ export default function Analyzer() {
         </div>
       )}
 
-      {phase === 'done' && analysis && <Report analysis={analysis} filename={filename} />}
+      <div style={{ marginTop: 18 }}>
+        <SamplePicker onPick={(buf, name, s) => run(buf, name, s)} busy={busy} />
+      </div>
+
+      {phase === 'done' && analysis && (
+        <Report analysis={analysis} filename={filename} sample={sample} />
+      )}
     </>
   );
 }
 
-function Report({ analysis, filename }: { analysis: Analysis; filename: string }) {
+function Report({
+  analysis,
+  filename,
+  sample,
+}: {
+  analysis: Analysis;
+  filename: string;
+  sample: SampleEntry | null;
+}) {
   const q = analysis.quality;
   if (!q) return null;
 
@@ -228,6 +241,8 @@ function Report({ analysis, filename }: { analysis: Analysis; filename: string }
               {w}
             </p>
           ))}
+
+          {sample && <SampleCheck sample={sample} score={q.score} />}
         </div>
       </section>
 

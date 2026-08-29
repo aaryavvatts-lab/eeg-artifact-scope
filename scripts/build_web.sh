@@ -11,11 +11,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-echo "==> Building the eegscope wheel"
-uv build --wheel
-mkdir -p web/public/wheels
-rm -f web/public/wheels/*.whl
-cp dist/*.whl web/public/wheels/
+echo "==> Building and staging the eegscope wheel"
+# Hashed filename, so the immutable cache header on /wheels/ is safe.
+uv run python scripts/stage_wheel.py
+
+echo "==> Checking the staged wheel matches the source"
+uv run pytest tests/test_wheel_fresh.py -q
 
 if [ -f outputs/benchmark.json ]; then
   echo "==> Using existing outputs/benchmark.json"

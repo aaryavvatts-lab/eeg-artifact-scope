@@ -1,11 +1,22 @@
-sample-muse2-blink.edf
-----------------------
-One Muse 2 recording (subject 01, cued eye-blink condition) from:
+Example recordings in samples/
+------------------------------
+Every file under samples/ is a short excerpt from a publicly published EEG
+dataset, cropped and rewritten as EDF so the website can offer something to try
+without hosting whole studies. samples/manifest.json records, for each file,
+which source file it came from and which seconds were taken.
 
-  "EEG dataset of consumer- and research-grade systems"
-  Minkyu Ahn et al., Handong Global University
-  https://figshare.com/articles/dataset/EEG_dataset_of_consumer-_and_research-grade_systems/30162868
+Sources and licences:
 
-Licensed CC-BY-4.0, which permits redistribution with attribution. Included so
-visitors can try the tool without supplying their own recording. The full
-dataset is not redistributed here -- only this single file.
+  EEG dataset of consumer- and research-grade systems
+  Ahn, M. and Lee, Y. (2026). Figshare. CC BY 4.0
+  https://doi.org/10.6084/m9.figshare.30162868
+
+  OpenNeuro ds002718, from Wakeman, D. G. and Henson, R. N. (2015),
+  "A multi-subject, multi-modal human neuroimaging dataset". CC0
+  https://openneuro.org/datasets/ds002718
+
+  iNCog-EEG. Figshare. CC BY 4.0
+  https://figshare.com/articles/dataset/iNCog-EEG_ideal_vs_Noisy_Cognitive_EEG_for_Workload_Assessment_Dataset/30003127
+
+Only these excerpts are redistributed. The full datasets are not hosted here.
+Please cite the groups above rather than this site if you use the data.

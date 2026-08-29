@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Analyzer from '@/components/Analyzer';
+import { SampleTable } from '@/components/SamplePicker';
 
 export const metadata = {
   title: 'Check a recording',
@@ -16,12 +17,32 @@ export default function CheckPage() {
         Drop in an EEG file. You will get back what was found, when it happened, which
         electrodes to drop, and how many minutes you can still use.
       </p>
+      <p className="lede">
+        No EEG file? There are ten real ones below, taken from published studies and chosen
+        so they behave differently from each other. Two of them are there to show the tool
+        refusing to answer instead of guessing.
+      </p>
       <p className="note">
         Nothing is uploaded. The analysis code runs inside this tab, so the file never leaves
         your machine. You can confirm that in your browser network tab while it works.
       </p>
 
       <Analyzer />
+
+      <section className="section">
+        <h2>The ten example recordings</h2>
+        <p>
+          Every one is a real excerpt, not a simulation. The score beside each was produced by
+          running the same analysis on the same file before this page was built, so if your
+          browser disagrees with it, something is wrong and the page will say so.
+        </p>
+        <SampleTable />
+        <p className="note">
+          That check has already earned its place. It caught the browser running an older copy
+          of the analysis code than the tests do, which made a twenty electrode recording score
+          51 here and 77 locally. There is now a test that fails when those two drift apart.
+        </p>
+      </section>
 
       <section className="section">
         <h2>What it reads</h2>

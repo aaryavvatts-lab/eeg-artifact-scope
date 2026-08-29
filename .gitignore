@@ -19,8 +19,9 @@ build/
 outputs/
 
 # The web app's runtime assets ARE committed: Vercel's build image has no
-# Python, no uv and no datasets, so it cannot regenerate them. The wheel is
-# 43 KB and the sample recording is 667 KB (CC-BY-4.0, see web/public/NOTICE).
+# Python, no uv and no datasets, so it cannot regenerate them. That covers the
+# wheel, the exported chart data, and the example recordings under samples/
+# (all CC-BY-4.0 or CC0, see web/public/NOTICE).
 web/public/*.set
 
 # Node / Next.js

@@ -1,0 +1,335 @@
+{
+ "note": "Real excerpts from public datasets. Every expected score below was produced by running the shipped pipeline on the exact file offered for download, so the page and the tool cannot drift apart.",
+ "samples": [
+  {
+   "slug": "clean-single-electrode",
+   "title": "Resting, one electrode",
+   "group": "Clean recordings",
+   "device": "MindWave 2, 1 electrode, 512 Hz",
+   "about": "A person sitting still with a single forehead electrode, before any task started.",
+   "look_for": "A high score. This is roughly the best a one electrode headset can do.",
+   "file": "/samples/clean-single-electrode.edf",
+   "bytes": 45568,
+   "seconds": 44.0,
+   "channels": 1,
+   "channels_analysed": 1,
+   "sfreq": 512.0,
+   "source": {
+    "name": "EEG dataset of consumer- and research-grade systems",
+    "authors": "Ahn, M. and Lee, Y. (2026)",
+    "url": "https://doi.org/10.6084/m9.figshare.30162868",
+    "licence": "CC BY 4.0",
+    "file": "sub-03_task-EB_acq-MW2_eeg.edf",
+    "window_s": [
+     6.0,
+     50.0
+    ]
+   },
+   "expected": {
+    "score": 99.5,
+    "grade": "A",
+    "dominant": "Mains line noise",
+    "usable_fraction": 1.0,
+    "bad_channels": 0,
+    "skipped": 0
+   }
+  },
+  {
+   "slug": "clean-headband",
+   "title": "Resting, four electrode headband",
+   "group": "Clean recordings",
+   "device": "Muse 2, 4 electrodes, 256 Hz",
+   "about": "The same idea on a Muse 2. Two electrodes behind the ears, two on the forehead.",
+   "look_for": "A high score, and a note that the electrode agreement check was skipped. Four electrodes are too far apart to cross-check.",
+   "file": "/samples/clean-headband.edf",
+   "bytes": 159744,
+   "seconds": 44.0,
+   "channels": 7,
+   "channels_analysed": 4,
+   "sfreq": 256.0,
+   "source": {
+    "name": "EEG dataset of consumer- and research-grade systems",
+    "authors": "Ahn, M. and Lee, Y. (2026)",
+    "url": "https://doi.org/10.6084/m9.figshare.30162868",
+    "licence": "CC BY 4.0",
+    "file": "sub-03_task-EB_acq-Muse2_eeg.edf",
+    "window_s": [
+     6.0,
+     50.0
+    ]
+   },
+   "expected": {
+    "score": 92.3,
+    "grade": "A",
+    "dominant": "Muscle / jaw clench",
+    "usable_fraction": 0.926,
+    "bad_channels": 0,
+    "skipped": 0
+   }
+  },
+  {
+   "slug": "clean-research-cap",
+   "title": "Resting, research cap",
+   "group": "Clean recordings",
+   "device": "DSI-24, 20 electrodes, 300 Hz",
+   "about": "A research grade dry electrode cap at rest. Dry electrodes need no gel, which makes them fast to fit and noisier than wet ones.",
+   "look_for": "A good score, but usually not as clean as you might expect from research hardware.",
+   "file": "/samples/clean-research-cap.edf",
+   "bytes": 530544,
+   "seconds": 38.0,
+   "channels": 23,
+   "channels_analysed": 20,
+   "sfreq": 300.0,
+   "source": {
+    "name": "EEG dataset of consumer- and research-grade systems",
+    "authors": "Ahn, M. and Lee, Y. (2026)",
+    "url": "https://doi.org/10.6084/m9.figshare.30162868",
+    "licence": "CC BY 4.0",
+    "file": "sub-03_task-EB_acq-DSI_eeg.edf",
+    "window_s": [
+     6.0,
+     44.0
+    ]
+   },
+   "expected": {
+    "score": 95.2,
+    "grade": "A",
+    "dominant": "Bad channels",
+    "usable_fraction": 0.968,
+    "bad_channels": 1,
+    "skipped": 0
+   }
+  },
+  {
+   "slug": "blinking-headband",
+   "title": "Blinking on cue, headband",
+   "group": "One artifact at a time",
+   "device": "Muse 2, 4 electrodes, 256 Hz",
+   "about": "The same person as the clean headband example, one minute later, blinking every three seconds on a beep.",
+   "look_for": "A blink every three seconds in the timeline, because that is when the beep went. The forehead electrodes sit right above the eyes.",
+   "file": "/samples/blinking-headband.edf",
+   "bytes": 231424,
+   "seconds": 64.0,
+   "channels": 7,
+   "channels_analysed": 4,
+   "sfreq": 256.0,
+   "source": {
+    "name": "EEG dataset of consumer- and research-grade systems",
+    "authors": "Ahn, M. and Lee, Y. (2026)",
+    "url": "https://doi.org/10.6084/m9.figshare.30162868",
+    "licence": "CC BY 4.0",
+    "file": "sub-03_task-EB_acq-Muse2_eeg.edf",
+    "window_s": [
+     62.0,
+     126.0
+    ]
+   },
+   "expected": {
+    "score": 91.5,
+    "grade": "A",
+    "dominant": "Eye blink",
+    "usable_fraction": 0.874,
+    "bad_channels": 0,
+    "skipped": 0
+   }
+  },
+  {
+   "slug": "blinking-single-electrode",
+   "title": "Blinking on cue, one electrode",
+   "group": "One artifact at a time",
+   "device": "BrainLink Pro, 1 electrode, 512 Hz",
+   "about": "Cued blinking recorded through a single forehead electrode, which is where a blink is largest.",
+   "look_for": "Blinks found from one channel with nothing to cross-check against. This is the hardest case for any artifact tool.",
+   "file": "/samples/blinking-single-electrode.edf",
+   "bytes": 66048,
+   "seconds": 64.0,
+   "channels": 1,
+   "channels_analysed": 1,
+   "sfreq": 512.0,
+   "source": {
+    "name": "EEG dataset of consumer- and research-grade systems",
+    "authors": "Ahn, M. and Lee, Y. (2026)",
+    "url": "https://doi.org/10.6084/m9.figshare.30162868",
+    "licence": "CC BY 4.0",
+    "file": "sub-03_task-EB_acq-BLP_eeg.edf",
+    "window_s": [
+     62.0,
+     126.0
+    ]
+   },
+   "expected": {
+    "score": 89.9,
+    "grade": "B",
+    "dominant": "Eye blink",
+    "usable_fraction": 0.855,
+    "bad_channels": 0,
+    "skipped": 0
+   }
+  },
+  {
+   "slug": "jaw-clench-headband",
+   "title": "Clenching the jaw, headband",
+   "group": "One artifact at a time",
+   "device": "Muse 2, 4 electrodes, 256 Hz",
+   "about": "Cued jaw clenching. Muscle activity from the jaw is fast and spread across frequencies.",
+   "look_for": "A large muscle penalty and a big drop in usable time. Compare it against the clean headband example from the same person.",
+   "file": "/samples/jaw-clench-headband.edf",
+   "bytes": 231424,
+   "seconds": 64.0,
+   "channels": 7,
+   "channels_analysed": 4,
+   "sfreq": 256.0,
+   "source": {
+    "name": "EEG dataset of consumer- and research-grade systems",
+    "authors": "Ahn, M. and Lee, Y. (2026)",
+    "url": "https://doi.org/10.6084/m9.figshare.30162868",
+    "licence": "CC BY 4.0",
+    "file": "sub-03_task-BT_acq-Muse2_eeg.edf",
+    "window_s": [
+     62.0,
+     126.0
+    ]
+   },
+   "expected": {
+    "score": 69.5,
+    "grade": "D",
+    "dominant": "Muscle / jaw clench",
+    "usable_fraction": 0.808,
+    "bad_channels": 0,
+    "skipped": 0
+   }
+  },
+  {
+   "slug": "jaw-clench-research-cap",
+   "title": "Clenching the jaw, research cap",
+   "group": "One artifact at a time",
+   "device": "DSI-24, 20 electrodes, 300 Hz",
+   "about": "The same jaw clenching task on twenty electrodes, so you can see which parts of the head it reaches.",
+   "look_for": "Muscle dominating the breakdown, and the per electrode detail showing it strongest near the temples.",
+   "file": "/samples/jaw-clench-research-cap.edf",
+   "bytes": 530544,
+   "seconds": 38.0,
+   "channels": 23,
+   "channels_analysed": 20,
+   "sfreq": 300.0,
+   "source": {
+    "name": "EEG dataset of consumer- and research-grade systems",
+    "authors": "Ahn, M. and Lee, Y. (2026)",
+    "url": "https://doi.org/10.6084/m9.figshare.30162868",
+    "licence": "CC BY 4.0",
+    "file": "sub-03_task-BT_acq-DSI_eeg.edf",
+    "window_s": [
+     62.0,
+     100.0
+    ]
+   },
+   "expected": {
+    "score": 61.0,
+    "grade": "D",
+    "dominant": "Muscle / jaw clench",
+    "usable_fraction": 0.69,
+    "bad_channels": 0,
+    "skipped": 0
+   }
+  },
+  {
+   "slug": "head-movement-bad-electrodes",
+   "title": "Head movement with failing electrodes",
+   "group": "Harder cases",
+   "device": "DSI-24, 20 electrodes, 300 Hz",
+   "about": "Cued head turns with the eyes closed. Movement pulls on the cap and some contacts start to fail.",
+   "look_for": "Several electrodes flagged as bad, and electrode pops in the timeline. This is the recording most worth acting on.",
+   "file": "/samples/head-movement-bad-electrodes.edf",
+   "bytes": 530544,
+   "seconds": 38.0,
+   "channels": 23,
+   "channels_analysed": 20,
+   "sfreq": 300.0,
+   "source": {
+    "name": "EEG dataset of consumer- and research-grade systems",
+    "authors": "Ahn, M. and Lee, Y. (2026)",
+    "url": "https://doi.org/10.6084/m9.figshare.30162868",
+    "licence": "CC BY 4.0",
+    "file": "sub-03_task-MVC_acq-DSI_eeg.edf",
+    "window_s": [
+     62.0,
+     100.0
+    ]
+   },
+   "expected": {
+    "score": 77.4,
+    "grade": "C",
+    "dominant": "Bad channels",
+    "usable_fraction": 0.915,
+    "bad_channels": 6,
+    "skipped": 0
+   }
+  },
+  {
+   "slug": "filtered-clinical",
+   "title": "A clinical recording that was filtered",
+   "group": "Harder cases",
+   "device": "Clinical system, 32 electrodes, 200 Hz",
+   "about": "A 32 channel clinical recording. It samples at 200 Hz, which looks fast enough to see muscle activity, but the signal was filtered away above about 38 Hz before it was saved.",
+   "look_for": "Muscle reported as not assessed rather than clean. A check that could not run is not a pass, and this is the case that taught me to say so.",
+   "file": "/samples/filtered-clinical.edf",
+   "bytes": 622848,
+   "seconds": 48.0,
+   "channels": 32,
+   "channels_analysed": 32,
+   "sfreq": 200.0,
+   "source": {
+    "name": "iNCog-EEG",
+    "authors": "Published on Figshare",
+    "url": "https://figshare.com/articles/dataset/iNCog-EEG_ideal_vs_Noisy_Cognitive_EEG_for_Workload_Assessment_Dataset/30003127",
+    "licence": "CC BY 4.0",
+    "file": "sub01_hw.edf",
+    "window_s": [
+     2.0,
+     50.0
+    ]
+   },
+   "expected": {
+    "score": 96.9,
+    "grade": "A",
+    "dominant": "Eye blink",
+    "usable_fraction": 0.966,
+    "bad_channels": 0,
+    "skipped": 1
+   }
+  },
+  {
+   "slug": "eye-and-heart-electrodes",
+   "title": "With real eye and heart electrodes",
+   "group": "Harder cases",
+   "device": "Research cap, 20 EEG plus 4 reference, 250 Hz",
+   "about": "A face perception study recorded with electrodes placed specifically to pick up eye movement and heartbeat, alongside the EEG.",
+   "look_for": "Blinks found from the real eye electrodes instead of guessed from the forehead, and a heartbeat rate reported with high confidence.",
+   "file": "/samples/eye-and-heart-electrodes.edf",
+   "bytes": 486400,
+   "seconds": 40.0,
+   "channels": 24,
+   "channels_analysed": 20,
+   "sfreq": 250.0,
+   "source": {
+    "name": "OpenNeuro ds002718, from Wakeman and Henson (2015)",
+    "authors": "Wakeman, D. G. and Henson, R. N.",
+    "url": "https://openneuro.org/datasets/ds002718",
+    "licence": "CC0",
+    "file": "sub-002_task-FaceRecognition_eeg.set",
+    "window_s": [
+     60.0,
+     100.0
+    ]
+   },
+   "expected": {
+    "score": 91.5,
+    "grade": "A",
+    "dominant": "Bad channels",
+    "usable_fraction": 0.876,
+    "bad_channels": 2,
+    "skipped": 0
+   }
+  }
+ ]
+}
