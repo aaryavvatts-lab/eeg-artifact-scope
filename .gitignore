@@ -18,9 +18,9 @@ build/
 # Generated analysis outputs (rebuilt by validate/run_all.py)
 outputs/
 
-# Large binaries staged into the web app at build time
-web/public/wheels/
-web/public/*.edf
+# The web app's runtime assets ARE committed: Vercel's build image has no
+# Python, no uv and no datasets, so it cannot regenerate them. The wheel is
+# 43 KB and the sample recording is 667 KB (CC-BY-4.0, see web/public/NOTICE).
 web/public/*.set
 
 # Node / Next.js
