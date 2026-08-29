@@ -1,10 +1,10 @@
 """Channel triage: decide what is actually analysable before anything is scored.
 
-This runs before every detector. Dataset 03 ships 16 all-zero ``Add_lead*``
-channels; without triage a flat-channel detector flags them and drags every
-quality score to the floor for a recording that is otherwise fine. Getting this
-wrong silently corrupts every downstream number, so it is a separate, tested step
-rather than a branch inside the detectors.
+This runs before every detector, because getting it wrong silently corrupts
+every downstream number. It drops dead channels and non-EEG traces, normalizes
+bipolar names so montage lookup works, and -- deliberately -- keeps channels
+that merely *look* like vendor placeholders, since dataset 03's "Add_lead*"
+channels turned out to carry real signal.
 """
 
 from __future__ import annotations
@@ -42,6 +42,8 @@ class TriageReport:
 
     kept: list[str] = field(default_factory=list)
     flat: list[str] = field(default_factory=list)
+    # Kept, not excluded: channels whose *name* looks like a vendor placeholder
+    # but which carry signal. Recorded so the UI can say so.
     placeholder: list[str] = field(default_factory=list)
     non_eeg: list[str] = field(default_factory=list)
     duplicate: list[str] = field(default_factory=list)
@@ -56,10 +58,10 @@ class TriageReport:
             "kept": self.kept,
             "excluded": {
                 "flat": self.flat,
-                "placeholder": self.placeholder,
                 "non_eeg": self.non_eeg,
                 "duplicate": self.duplicate,
             },
+            "kept_but_suspicious": {"placeholder_named": self.placeholder},
             "warnings": self.warnings,
         }
 
@@ -120,10 +122,6 @@ def triage(rec: Recording, *, drop_flat: bool = True) -> tuple[Recording, Triage
             report.non_eeg.append(name)
             continue
 
-        if _PLACEHOLDER.match(norm):
-            report.placeholder.append(name)
-            continue
-
         if norm in seen:
             report.duplicate.append(name)
             continue
@@ -131,6 +129,14 @@ def triage(rec: Recording, *, drop_flat: bool = True) -> tuple[Recording, Triage
         if drop_flat and is_flat(rec.data[i], rtol=flat_tol):
             report.flat.append(name)
             continue
+
+        # A vendor placeholder name is a hint, not proof. Dataset 03's
+        # "Add_lead1..16" carry 9-17 uV of real signal and are statistically
+        # indistinguishable from its named channels, so dropping them on the
+        # name alone silently discarded half the montage. Only genuinely dead
+        # channels are dropped (above); a live placeholder is kept and flagged.
+        if _PLACEHOLDER.match(norm):
+            report.placeholder.append(name)
 
         seen[norm] = i
         keep.append(i)
@@ -151,6 +157,14 @@ def triage(rec: Recording, *, drop_flat: bool = True) -> tuple[Recording, Triage
         report.warnings.append(
             f"Median amplitude {median_amp * 1e9:.2f} nV is far below scalp EEG; "
             "the file's unit field may be wrong."
+        )
+
+    if report.placeholder:
+        report.warnings.append(
+            f"{len(report.placeholder)} channel(s) are named like unused vendor "
+            f"inputs ({', '.join(report.placeholder[:3])}"
+            + ("..." if len(report.placeholder) > 3 else "")
+            + ") but carry signal, so they were kept. Check they are real electrodes."
         )
 
     n_named = sum(1 for n in report.kept if normalize_name(n) in _TEN_TWENTY)

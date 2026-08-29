@@ -145,6 +145,66 @@ def merge_events(events: list[ArtifactEvent], gap: float = 0.0) -> list[Artifact
     return out
 
 
+REFERENCE_FREQ = 10.0
+ROLLOFF_DB = 20.0
+
+
+def effective_bandwidth(
+    data: np.ndarray,
+    sfreq: float,
+    *,
+    reference_hz: float = REFERENCE_FREQ,
+    rolloff_db: float = ROLLOFF_DB,
+) -> float:
+    """Highest frequency at which the recording still carries real signal.
+
+    Sample rate is an upper bound, not a promise. A system that samples at
+    200 Hz but low-passes at 40 Hz has only quantization noise above 40 Hz, and
+    any band power measured up there is meaningless. Dataset 03 is exactly this
+    case -- sampled at 200 Hz, down 21 dB by 40 Hz, flat thereafter -- and
+    measuring "muscle" in its 63-93 Hz band flagged 17% of *every* channel
+    uniformly, which is a property of the method rather than of the subject.
+
+    Measured against the spectrum's own level at ``reference_hz`` rather than
+    against its noise floor. Flatness is not evidence of absence: real surface
+    EMG is broadband and flat, so a floor-relative test wrongly rejects a
+    perfectly good 300 Hz recording that genuinely has muscle content up to
+    140 Hz. A hard drop below the alpha-band reference is the thing that
+    actually indicates a filter.
+    """
+    from scipy import signal as sps  # local: keeps module import cheap
+
+    if data.ndim == 1:
+        data = data[None, :]
+    nyquist = sfreq / 2.0
+    nperseg = int(min(data.shape[-1], max(sfreq * 2, 256)))
+    if nperseg < 64:
+        return nyquist
+
+    freqs, psd = sps.welch(data, fs=sfreq, nperseg=nperseg, axis=-1)
+    mean_psd = psd.mean(axis=0)
+
+    ref_idx = int(np.argmin(np.abs(freqs - reference_hz)))
+    ref = float(mean_psd[ref_idx])
+    if ref <= 0:
+        return nyquist
+
+    threshold = ref * (10 ** (-rolloff_db / 10.0))
+
+    # Smooth first so a single narrow notch cannot look like a cutoff, and so a
+    # mains spike cannot hold the estimate artificially high.
+    if mean_psd.size >= 5:
+        kernel = np.ones(5) / 5.0
+        smoothed = np.convolve(mean_psd, kernel, mode="same")
+    else:
+        smoothed = mean_psd
+
+    above = np.flatnonzero((smoothed > threshold) & (freqs > reference_hz))
+    if above.size == 0:
+        return float(freqs[ref_idx])
+    return float(freqs[above[-1]])
+
+
 def usable_band(sfreq: float, low: float, high: float) -> tuple[float, float] | None:
     """Clamp a filter band to what ``sfreq`` can actually represent.
 

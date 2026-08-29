@@ -19,7 +19,14 @@ import numpy as np
 from scipy import signal as sps
 
 from ..recording import Recording
-from .base import MUSCLE, ArtifactEvent, DetectorResult, merge_events, robust_z
+from .base import (
+    MUSCLE,
+    ArtifactEvent,
+    DetectorResult,
+    effective_bandwidth,
+    merge_events,
+    robust_z,
+)
 
 # Preferred band, and the lowest we will accept before calling it hopeless.
 PREFERRED_BAND = (110.0, 140.0)
@@ -38,7 +45,7 @@ MERGE_GAP_S = 0.2
 DEFAULT_Z = 4.0
 
 
-def _choose_band(sfreq: float) -> tuple[tuple[float, float] | None, str]:
+def _choose_band(sfreq: float, max_freq: float | None = None) -> tuple[tuple[float, float] | None, str]:
     """Pick the *highest* narrow muscle band this sample rate can represent.
 
     Measured on dataset 01's cued jaw-clench vs blink recordings: widening the
@@ -50,7 +57,11 @@ def _choose_band(sfreq: float) -> tuple[tuple[float, float] | None, str]:
 
     So: take the top of what the device can see, and keep the window narrow.
     """
-    hi = min(PREFERRED_BAND[1], (sfreq / 2.0) * NYQUIST_FRACTION)
+    ceiling = (sfreq / 2.0) * NYQUIST_FRACTION
+    if max_freq is not None:
+        # Never measure above where the recording still has real signal.
+        ceiling = min(ceiling, max_freq)
+    hi = min(PREFERRED_BAND[1], ceiling)
     if hi < MIN_USABLE_HIGH:
         return None, "unavailable"
     lo = max(MIN_USABLE_LOW, hi - BAND_WIDTH)
@@ -73,12 +84,22 @@ def detect_muscle(
         res.skipped_reason = "no channels to analyse"
         return res
 
-    band, mode = _choose_band(rec.sfreq)
+    bandwidth = effective_bandwidth(rec.data, rec.sfreq)
+    band, mode = _choose_band(rec.sfreq, max_freq=bandwidth)
     if band is None:
-        res.skipped_reason = (
-            f"sample rate {rec.sfreq:g} Hz cannot represent a muscle band "
-            f"(need >= {MIN_USABLE_HIGH / NYQUIST_FRACTION * 2:.0f} Hz)"
-        )
+        nyq_limit = MIN_USABLE_HIGH / NYQUIST_FRACTION * 2
+        if bandwidth < MIN_USABLE_HIGH:
+            res.skipped_reason = (
+                f"this recording carries no signal above {bandwidth:.0f} Hz "
+                f"(sampled at {rec.sfreq:g} Hz but low-passed well below it), so "
+                "muscle contamination cannot be measured"
+            )
+        else:
+            res.skipped_reason = (
+                f"sample rate {rec.sfreq:g} Hz cannot represent a muscle band "
+                f"(need >= {nyq_limit:.0f} Hz)"
+            )
+        res.detail = {"effective_bandwidth_hz": round(bandwidth, 1), "sfreq": rec.sfreq}
         return res
 
     if rec.n_samples < int(rec.sfreq * 2):
@@ -133,6 +154,7 @@ def detect_muscle(
         "band_hz": [round(b, 1) for b in band],
         "band_mode": mode,
         "sfreq": rec.sfreq,
+        "effective_bandwidth_hz": round(bandwidth, 1),
         # Made explicit because a 256 Hz headset genuinely cannot see the
         # 110-140 Hz band, and a reader should know the number is not
         # comparable with a 1000 Hz recording's.
