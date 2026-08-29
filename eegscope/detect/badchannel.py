@@ -44,7 +44,10 @@ MIN_CORRELATION = 0.35
 # absolute ceiling as a backstop for the case where *every* channel is bad.
 HF_OUTLIER_Z = 4.0
 ABSOLUTE_MAX_HF_RATIO = 0.80
-MIN_CHANNELS_FOR_HF_OUTLIER = 4
+# A robust z-score needs enough channels for the median and MAD to be stable.
+# Over 4 values a single outlier moves both, so the test becomes arbitrary --
+# on a 4-electrode Muse 2 it flagged whichever channel happened to be highest.
+MIN_CHANNELS_FOR_HF_OUTLIER = 6
 # Below this the montage is too sparse for "agrees with its neighbours" to be a
 # meaningful question -- see the module docstring.
 MIN_CHANNELS_FOR_CORRELATION = 8
@@ -178,8 +181,15 @@ def detect_bad_channels(
             "flat": True,
             "deviation": bool(valid.sum() >= 3),
             "correlation": corr_ran,
-            "high_frequency": hf_ran,
+            "high_frequency": bool(hf_ran and rec.n_channels >= MIN_CHANNELS_FOR_HF_OUTLIER),
         },
+        "hf_note": (
+            None
+            if rec.n_channels >= MIN_CHANNELS_FOR_HF_OUTLIER
+            else f"High-frequency comparison needs >= {MIN_CHANNELS_FOR_HF_OUTLIER} "
+            f"channels to be stable; this recording has {rec.n_channels}, so only "
+            "the absolute backstop was applied."
+        ),
         "checks_skipped_note": (
             None
             if corr_ran

@@ -15,7 +15,15 @@ import numpy as np
 from scipy import signal as sps
 
 from ..recording import Recording
-from .base import DRIFT, POP, ArtifactEvent, DetectorResult, merge_events, robust_z
+from .base import (
+    DRIFT,
+    POP,
+    ArtifactEvent,
+    DetectorResult,
+    head_wide,
+    merge_events,
+    robust_z,
+)
 
 DRIFT_BAND = (0.1, 1.0)
 DRIFT_SMOOTH_S = 1.0
@@ -87,7 +95,7 @@ def detect_drift(
     envelope = _smooth(np.abs(sps.hilbert(filtered, axis=-1)), rec.sfreq, DRIFT_SMOOTH_S)
 
     z = robust_z(envelope, axis=-1)
-    z_max = z.max(axis=0)
+    z_max = head_wide(z)
     hot = z.argmax(axis=0)
 
     # Both criteria must hold: unusual for this recording, and large in volts.

@@ -31,6 +31,10 @@ WEIGHTS = {
     CARDIAC: 4.0,
 }
 BAD_CHANNEL_WEIGHT = 20.0
+# Fraction of channels that must be bad before this costs its full weight.
+# At 0.25 a single dead electrode on a 4-channel headset maxed the penalty and
+# dropped an otherwise-90%-usable recording to a D, which overstates it.
+BAD_CHANNEL_SATURATION = 0.5
 
 # Contaminated fraction at which a class costs its full weight.
 SATURATION = {
@@ -132,25 +136,27 @@ def _grade(score: float) -> str:
     return "F"
 
 
+def _issue_phrase(dominant: str | None) -> str:
+    """Read naturally whether the dominant term is an artifact or a channel fault."""
+    if not dominant:
+        return "artifact contamination"
+    if "channel" in dominant:
+        return "bad channels"
+    return f"{dominant} contamination"
+
+
 def _verdict(score: float, usable_fraction: float, dominant: str | None) -> str:
+    issue = _issue_phrase(dominant)
+    left = f"about {usable_fraction:.0%} of the recording is usable"
     if score >= 90:
         return "Clean. Suitable for analysis as-is."
     if score >= 80:
-        return f"Good. Some {dominant or 'artifact'} contamination, but most of the recording is usable."
+        return f"Good. Some {issue}, but most of the recording is usable."
     if score >= 70:
-        return (
-            f"Usable with cleaning. {dominant or 'Artifact'} contamination is significant; "
-            f"about {usable_fraction:.0%} of the recording survives rejection."
-        )
+        return f"Usable with cleaning. {issue.capitalize()} is significant, though {left}."
     if score >= 60:
-        return (
-            f"Marginal. Heavy {dominant or 'artifact'} contamination leaves roughly "
-            f"{usable_fraction:.0%} usable. Consider re-recording."
-        )
-    return (
-        f"Poor. {dominant or 'Artifact'} contamination dominates; only about "
-        f"{usable_fraction:.0%} of the recording is usable. Re-record if possible."
-    )
+        return f"Marginal. Heavy {issue}; {left}. Check the breakdown before relying on it."
+    return f"Poor. {issue.capitalize()} dominates and only {usable_fraction:.0%} is usable. Re-record if possible."
 
 
 def score_recording(
@@ -250,7 +256,9 @@ def score_recording(
         bad_names = list(bc.detail.get("bad_channels", []))
         n_total = max(1, int(bc.detail.get("n_total", rec.n_channels)))
         frac_bad = len(bad_names) / n_total
-        penalty = BAD_CHANNEL_WEIGHT * float(np.clip(frac_bad / 0.25, 0.0, 1.0))
+        penalty = BAD_CHANNEL_WEIGHT * float(
+            np.clip(frac_bad / BAD_CHANNEL_SATURATION, 0.0, 1.0)
+        )
         components.append(
             ScoreComponent(
                 kind="bad_channel",

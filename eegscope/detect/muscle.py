@@ -24,6 +24,7 @@ from .base import (
     ArtifactEvent,
     DetectorResult,
     effective_bandwidth,
+    head_wide,
     merge_events,
     robust_z,
 )
@@ -115,10 +116,11 @@ def detect_muscle(
     kernel /= kernel.sum()
     smoothed = np.apply_along_axis(lambda v: np.convolve(v, kernel, mode="same"), -1, envelope)
 
-    # Per-channel z, then take the head-wide maximum. A clench is regional
-    # (temporal sites), so averaging across channels would dilute it away.
+    # Per-channel z, collapsed with a high percentile rather than a max: a max
+    # scales with how many electrodes are watching, which made dense caps look
+    # dirty. See head_wide().
     z = robust_z(smoothed, axis=-1)
-    z_max = z.max(axis=0)
+    z_max = head_wide(z)
     hot_channel = z.argmax(axis=0)
 
     above = z_max >= z_threshold
@@ -164,11 +166,8 @@ def detect_muscle(
             else f"Sample rate forced an adapted {band[0]:.0f}-{band[1]:.0f} Hz band; "
             "muscle power above the Nyquist limit is invisible to this recording."
         ),
-        # The head-wide statistic is a max across channels, so a 24-electrode
-        # cap has more chances to exceed threshold than a 1-electrode headset.
-        # Fine for scoring one file; stated here because it makes raw
-        # cross-device rates not directly comparable.
         "n_channels_scanned": rec.n_channels,
+        "head_wide_statistic": "90th percentile across channels",
     }
 
     # Fraction of time each channel spent above threshold: this is what points

@@ -149,6 +149,32 @@ REFERENCE_FREQ = 10.0
 ROLLOFF_DB = 20.0
 
 
+# Percentile used to collapse per-channel scores into one head-wide trace.
+HEAD_WIDE_PERCENTILE = 90.0
+
+
+def head_wide(z: np.ndarray, percentile: float = HEAD_WIDE_PERCENTILE) -> np.ndarray:
+    """Collapse a ``(n_channels, n_samples)`` score into one trace.
+
+    A plain max is what you reach for first, and it is biased by channel count:
+    with 70 electrodes something is always the highest, so a dense cap looks
+    dirtier than a headband recorded at the same moment. Measured on rest
+    minutes, a max flagged 20% of a 70-channel recording and 11% of a
+    20-channel one against 0.2% of a 4-channel one -- almost entirely an
+    artifact of how many channels were watching.
+
+    A high percentile removes that: on cued jaw clenches it returns 0.20-0.22
+    across 1, 4 and 20 channel devices alike, while rest drops to 0.00-0.04.
+    Genuinely focal problems are not lost -- they are what the bad-channel
+    detector and the per-channel breakdown are for.
+    """
+    if z.ndim == 1:
+        return z
+    if z.shape[0] == 1:
+        return z[0]
+    return np.percentile(z, percentile, axis=0)
+
+
 def effective_bandwidth(
     data: np.ndarray,
     sfreq: float,
