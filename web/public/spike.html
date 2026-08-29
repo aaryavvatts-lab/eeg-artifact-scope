@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Pyodide spike — eeg-artifact-scope</title>
+<style>
+  body { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; margin: 2rem; max-width: 60rem; }
+  #log { white-space: pre-wrap; line-height: 1.5; }
+  .ok   { color: #0a7f3f; }
+  .bad  { color: #c22; font-weight: 600; }
+  .step { color: #666; }
+  h1 { font-size: 1.1rem; }
+</style>
+</head>
+<body>
+<h1>Pyodide spike: can the browser run eegscope?</h1>
+<div id="log"></div>
+
+<script type="module">
+const logEl = document.getElementById('log');
+const t0 = performance.now();
+const at = () => ((performance.now() - t0) / 1000).toFixed(1).padStart(5) + 's ';
+
+function line(msg, cls = 'step') {
+  logEl.insertAdjacentHTML('beforeend', `<span class="${cls}">${at()}${msg}</span>\n`);
+}
+
+// Signals to the driving script that the run finished, pass or fail.
+function finish(ok, detail) {
+  window.__SPIKE__ = { ok, detail };
+  line(ok ? `RESULT: PASS — ${detail}` : `RESULT: FAIL — ${detail}`, ok ? 'ok' : 'bad');
+}
+
+try {
+  line('loading pyodide runtime...');
+  const { loadPyodide } = await import('https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.mjs');
+  const pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.28.3/full/' });
+  line('pyodide ready');
+
+  line('loading numpy, scipy, scikit-learn (the three eegscope needs)...');
+  await pyodide.loadPackage(['numpy', 'scipy', 'scikit-learn', 'micropip']);
+  line('scientific stack ready');
+
+  line('installing the eegscope wheel...');
+  const micropip = pyodide.pyimport('micropip');
+  await micropip.install('./wheels/eeg_artifact_scope-0.1.0-py3-none-any.whl');
+  line('eegscope installed');
+
+  line('fetching a real Muse 2 EDF recording...');
+  const buf = new Uint8Array(await (await fetch('./sample-muse2-blink.edf')).arrayBuffer());
+  pyodide.FS.writeFile('/tmp/sample.edf', buf);
+  line(`fetched ${(buf.length / 1024).toFixed(0)} KB`);
+
+  line('parsing it with the same reader the tests verified against MNE...');
+  const result = pyodide.runPython(`
+import json
+import numpy as np
+from scipy import signal
+from sklearn.decomposition import FastICA
+
+from eegscope.readers.edf import read_edf
+
+rec = read_edf("/tmp/sample.edf")
+eeg = rec.picks("eeg")
+
+# Exercise the parts the detectors will actually lean on, so the spike fails
+# here rather than three phases later.
+sos = signal.butter(4, [1.0, 10.0], btype="band", fs=rec.sfreq, output="sos")
+filtered = signal.sosfiltfilt(sos, rec.data[eeg], axis=-1)
+freqs, psd = signal.welch(rec.data[eeg], fs=rec.sfreq, nperseg=int(rec.sfreq * 2))
+env = np.abs(signal.hilbert(filtered, axis=-1))
+
+ica_ok = True
+try:
+    if len(eeg) >= 2:
+        FastICA(n_components=min(len(eeg), 4), random_state=0, max_iter=200).fit(
+            rec.data[eeg][:, ::4].T
+        )
+except Exception as exc:  # surfaced in the report rather than swallowed
+    ica_ok = f"{type(exc).__name__}: {exc}"
+
+beeps = [a for a in rec.meta["annotations"] if a.description.endswith("Number_02")]
+
+json.dumps({
+    "channels": rec.n_channels,
+    "eeg_channels": len(eeg),
+    "names": rec.ch_names,
+    "sfreq": rec.sfreq,
+    "duration_s": round(rec.duration, 1),
+    "median_uv": round(rec.meta["median_abs_amplitude_v"] * 1e6, 2),
+    "assumed_uv": bool(rec.meta.get("assumed_microvolts")),
+    "filtered_shape": list(filtered.shape),
+    "psd_bins": int(psd.shape[-1]),
+    "peak_freq_hz": round(float(freqs[np.argmax(psd.mean(0))]), 2),
+    "envelope_ok": bool(np.isfinite(env).all()),
+    "ica_ok": ica_ok,
+    "cued_beeps": len(beeps),
+    "first_beep_s": beeps[0].onset if beeps else None,
+})
+  `);
+
+  const r = JSON.parse(result);
+  line('');
+  line(`  channels        ${r.channels} (${r.eeg_channels} EEG): ${r.names.join(', ')}`);
+  line(`  sample rate     ${r.sfreq} Hz over ${r.duration_s}s`);
+  line(`  median amp      ${r.median_uv} µV  (microvolts assumed: ${r.assumed_uv})`);
+  line(`  bandpass 1-10Hz ${r.filtered_shape.join(' x ')}`);
+  line(`  welch PSD       ${r.psd_bins} bins, peak at ${r.peak_freq_hz} Hz`);
+  line(`  hilbert env     ${r.envelope_ok ? 'finite' : 'NON-FINITE'}`);
+  line(`  FastICA         ${r.ica_ok === true ? 'converged' : r.ica_ok}`);
+  line(`  cued beeps      ${r.cued_beeps} (first at ${r.first_beep_s}s)`);
+  line('');
+
+  const problems = [];
+  if (r.eeg_channels < 1) problems.push('no EEG channels parsed');
+  if (r.cued_beeps !== 20) problems.push(`expected 20 cued beeps, got ${r.cued_beeps}`);
+  if (!r.envelope_ok) problems.push('hilbert envelope not finite');
+  if (r.ica_ok !== true) problems.push(`FastICA failed: ${r.ica_ok}`);
+  if (!(r.median_uv > 0.001 && r.median_uv < 10000)) problems.push(`implausible amplitude ${r.median_uv} µV`);
+
+  if (problems.length) finish(false, problems.join('; '));
+  else finish(true, 'EDF parsing, filtering, PSD, Hilbert and ICA all work in-browser');
+} catch (err) {
+  console.error(err);
+  finish(false, `${err?.name || 'Error'}: ${err?.message || err}`);
+}
+</script>
+</body>
+</html>

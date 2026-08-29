@@ -1,0 +1,34 @@
+# Datasets are large (~5.5 GB) and separately licensed -- never committed.
+# See data/WHERE_TO_PUT_DATA.md and the table in README.md.
+# (Pattern is `data/*`, not `data/`: git cannot re-include a file whose parent
+# directory is excluded, so the negation below would never fire.)
+data/*
+!data/WHERE_TO_PUT_DATA.md
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+
+# Generated analysis outputs (rebuilt by validate/run_all.py)
+outputs/
+
+# Large binaries staged into the web app at build time
+web/public/wheels/
+web/public/*.edf
+web/public/*.set
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+
+# OS
+.DS_Store

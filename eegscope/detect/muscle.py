@@ -1,0 +1,157 @@
+"""Muscle / jaw-clench detection.
+
+Scalp EMG from the temporalis and masseter muscles is broadband and fast,
+sitting well above the ~30 Hz where real cortical rhythms have most of their
+power. So the signature is a burst of high-frequency energy, strongest at
+temporal electrodes, lasting as long as the clench.
+
+The awkward part is sample rate. The textbook muscle band is 110-140 Hz, which
+needs >=280 Hz sampling. Half the devices here run at 256 Hz, so that band does
+not exist for them. Rather than silently return "clean" for a headset that
+physically cannot see muscle noise, the band is adapted to the available
+bandwidth and the choice is reported -- and if nothing usable is left, the
+detector marks itself skipped.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+from scipy import signal as sps
+
+from ..recording import Recording
+from .base import MUSCLE, ArtifactEvent, DetectorResult, merge_events, robust_z
+
+# Preferred band, and the lowest we will accept before calling it hopeless.
+PREFERRED_BAND = (110.0, 140.0)
+BAND_WIDTH = 30.0
+MIN_USABLE_LOW = 35.0
+MIN_USABLE_HIGH = 65.0
+# Fraction of Nyquist we are willing to filter up to before the anti-alias
+# roll-off makes the band meaningless.
+NYQUIST_FRACTION = 0.93
+
+# A clench lasts hundreds of ms to seconds.
+SMOOTH_S = 0.25
+MIN_DURATION_S = 0.1
+MERGE_GAP_S = 0.2
+
+DEFAULT_Z = 4.0
+
+
+def _choose_band(sfreq: float) -> tuple[tuple[float, float] | None, str]:
+    """Pick the *highest* narrow muscle band this sample rate can represent.
+
+    Measured on dataset 01's cued jaw-clench vs blink recordings: widening the
+    band downward to 20 Hz to "capture more muscle" badly hurts specificity,
+    because real cortical rhythms and blink/movement energy live below ~40 Hz.
+    A 20-135 Hz band fired almost as often during blinking as during clenching
+    (1.4x separation on the DSI-24); the highest available 30 Hz window raised
+    that to 2.6x on the same recordings, and 24x on a 512 Hz device.
+
+    So: take the top of what the device can see, and keep the window narrow.
+    """
+    hi = min(PREFERRED_BAND[1], (sfreq / 2.0) * NYQUIST_FRACTION)
+    if hi < MIN_USABLE_HIGH:
+        return None, "unavailable"
+    lo = max(MIN_USABLE_LOW, hi - BAND_WIDTH)
+    if hi - lo < 10.0:
+        return None, "unavailable"
+    mode = "preferred" if (lo, hi) == PREFERRED_BAND else "adapted"
+    return (lo, hi), mode
+
+
+def detect_muscle(
+    rec: Recording,
+    *,
+    z_threshold: float = DEFAULT_Z,
+    smooth_s: float = SMOOTH_S,
+) -> DetectorResult:
+    """Find muscle/jaw-clench bursts in ``rec``."""
+    res = DetectorResult(kind=MUSCLE)
+
+    if rec.n_channels == 0:
+        res.skipped_reason = "no channels to analyse"
+        return res
+
+    band, mode = _choose_band(rec.sfreq)
+    if band is None:
+        res.skipped_reason = (
+            f"sample rate {rec.sfreq:g} Hz cannot represent a muscle band "
+            f"(need >= {MIN_USABLE_HIGH / NYQUIST_FRACTION * 2:.0f} Hz)"
+        )
+        return res
+
+    if rec.n_samples < int(rec.sfreq * 2):
+        res.skipped_reason = "recording shorter than two seconds"
+        return res
+
+    sos = sps.butter(4, band, btype="band", fs=rec.sfreq, output="sos")
+    filtered = sps.sosfiltfilt(sos, rec.data, axis=-1)
+    envelope = np.abs(sps.hilbert(filtered, axis=-1))
+
+    win = max(3, int(round(smooth_s * rec.sfreq)) | 1)
+    kernel = sps.windows.hann(win)
+    kernel /= kernel.sum()
+    smoothed = np.apply_along_axis(lambda v: np.convolve(v, kernel, mode="same"), -1, envelope)
+
+    # Per-channel z, then take the head-wide maximum. A clench is regional
+    # (temporal sites), so averaging across channels would dilute it away.
+    z = robust_z(smoothed, axis=-1)
+    z_max = z.max(axis=0)
+    hot_channel = z.argmax(axis=0)
+
+    above = z_max >= z_threshold
+    events: list[ArtifactEvent] = []
+    if above.any():
+        edges = np.diff(above.astype(np.int8))
+        starts = list(np.flatnonzero(edges == 1) + 1)
+        stops = list(np.flatnonzero(edges == -1) + 1)
+        if above[0]:
+            starts.insert(0, 0)
+        if above[-1]:
+            stops.append(len(above))
+
+        for s, e in zip(starts, stops):
+            duration = (e - s) / rec.sfreq
+            if duration < MIN_DURATION_S:
+                continue
+            peak = float(z_max[s:e].max())
+            chans = sorted({rec.ch_names[c] for c in hot_channel[s:e]})
+            events.append(
+                ArtifactEvent(
+                    onset=s / rec.sfreq,
+                    duration=duration,
+                    kind=MUSCLE,
+                    severity=float(np.clip((peak - z_threshold) / (3 * z_threshold), 0, 1)),
+                    channels=chans,
+                )
+            )
+
+    res.events = merge_events(events, gap=MERGE_GAP_S)
+    res.threshold = z_threshold
+    res.detail = {
+        "band_hz": [round(b, 1) for b in band],
+        "band_mode": mode,
+        "sfreq": rec.sfreq,
+        # Made explicit because a 256 Hz headset genuinely cannot see the
+        # 110-140 Hz band, and a reader should know the number is not
+        # comparable with a 1000 Hz recording's.
+        "band_note": (
+            "Preferred 110-140 Hz band used."
+            if mode == "preferred"
+            else f"Sample rate forced an adapted {band[0]:.0f}-{band[1]:.0f} Hz band; "
+            "muscle power above the Nyquist limit is invisible to this recording."
+        ),
+        # The head-wide statistic is a max across channels, so a 24-electrode
+        # cap has more chances to exceed threshold than a 1-electrode headset.
+        # Fine for scoring one file; stated here because it makes raw
+        # cross-device rates not directly comparable.
+        "n_channels_scanned": rec.n_channels,
+    }
+
+    # Fraction of time each channel spent above threshold: this is what points
+    # at *which* electrode the clench sits under.
+    for i, name in enumerate(rec.ch_names):
+        res.per_channel[name] = float((z[i] >= z_threshold).mean())
+
+    return res

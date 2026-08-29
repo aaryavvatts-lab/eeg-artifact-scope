@@ -1,0 +1,44 @@
+[project]
+name = "eeg-artifact-scope"
+version = "0.1.0"
+description = "Artifact detection and signal-quality scoring for EEG, calibrated on cued ground truth."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+# Deliberately minimal. Everything in `eegscope` must install inside Pyodide,
+# where numpy, scipy and scikit-learn are available but MNE is not.
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "scikit-learn>=1.3",
+]
+
+[project.optional-dependencies]
+# The offline half: reading research formats, validating against MNE, training.
+lab = [
+    "mne>=1.6",
+    "mne-bids>=0.14",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "h5py>=3.9",
+]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+eeg-scope = "eegscope.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["eegscope"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
