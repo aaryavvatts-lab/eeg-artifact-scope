@@ -17,7 +17,7 @@ const erode = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://eeg-artifact-scope.vercel.app'),
+  metadataBase: new URL('https://eeg-artifact-finder.vercel.app'),
   title: {
     default: 'EEG Artifact Scope',
     template: '%s · EEG Artifact Scope',

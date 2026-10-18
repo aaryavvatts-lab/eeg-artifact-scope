@@ -53,7 +53,7 @@ Headline, measured against 30 subjects performing *cued* artifacts:
 
 ## Usage
 
-**Live: <https://eeg-artifact-scope.vercel.app>** — drop a file in; nothing is
+**Live: <https://eeg-artifact-finder.vercel.app>** — drop a file in; nothing is
 uploaded. The Python runtime is fetched from a CDN on first load (~15 s), after
 which analysis is local and instant.
 
