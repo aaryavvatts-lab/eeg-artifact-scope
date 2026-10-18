@@ -8,8 +8,7 @@ export const metadata = {
 
 export default function DataPage() {
   return (
-    <div className="wrap section prose">
-      <p className="eyebrow">Four public datasets · none collected by me</p>
+    <div className="wrap section page-head prose">
       <h1>Where the data came from</h1>
       <p className="lede">
         I did not record any of this. Four groups collected and published these datasets, and

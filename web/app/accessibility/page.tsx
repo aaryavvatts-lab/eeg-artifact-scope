@@ -8,8 +8,8 @@ export const metadata = {
 
 export default function AccessibilityPage() {
   return (
-    <div className="wrap section prose narrow">
-      <p className="eyebrow">Last updated 29 August 2026</p>
+    <div className="wrap section page-head prose narrow">
+      <p className="updated">Last updated 18 October 2026</p>
       <h1>Accessibility</h1>
 
       <p className="lede">
@@ -66,8 +66,9 @@ export default function AccessibilityPage() {
       <h3>Motion and layout</h3>
       <ul>
         <li>
-          Nothing moves, flashes or animates on its own. Nothing on the site can trigger a
-          seizure.
+          Sections fade in once as they come into view and the title rises once on load.
+          Nothing flashes, nothing loops, and nothing is hidden while waiting for a script.
+          Nothing on the site can trigger a seizure.
         </li>
         <li>
           Smooth scrolling and transitions switch off when your system asks for reduced motion.

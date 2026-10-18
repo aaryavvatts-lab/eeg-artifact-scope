@@ -8,8 +8,7 @@ export const metadata = {
 
 export default function MethodsPage() {
   return (
-    <div className="wrap section prose">
-      <p className="eyebrow">How it works</p>
+    <div className="wrap section page-head prose">
       <h1>Methods</h1>
       <p className="lede">
         Nothing here is novel. The detectors follow methods that are already standard in EEG

@@ -2,13 +2,13 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'Cookies and storage',
-  description: 'This site sets no cookies. It saves two settings in your browser, listed here in full.',
+  description: 'This site sets no cookies. It saves one setting in your browser, listed here in full.',
 };
 
 export default function CookiesPage() {
   return (
-    <div className="wrap section prose narrow">
-      <p className="eyebrow">Last updated 29 August 2026</p>
+    <div className="wrap section page-head prose narrow">
+      <p className="updated">Last updated 18 October 2026</p>
       <h1>Cookies and storage</h1>
 
       <h2>The short version</h2>
@@ -18,8 +18,9 @@ export default function CookiesPage() {
         tracking to accept.
       </p>
       <p>
-        Two values are saved in your browser&rsquo;s local storage so the site behaves sensibly
-        between visits. Both are listed below in full.
+        One value is saved in your browser&rsquo;s local storage, and only if you press the Light
+        or Dark control in the header, so the site keeps your colours between visits. It is
+        listed below in full.
       </p>
 
       <h2>Everything that gets stored</h2>
@@ -36,17 +37,10 @@ export default function CookiesPage() {
           </thead>
           <tbody>
             <tr>
-              <td><code>eas-theme</code></td>
+              <td><code>theme</code></td>
               <td>Local storage</td>
               <td><code>light</code> or <code>dark</code></td>
               <td>Remembers whether you switched the appearance</td>
-              <td>Never, until you clear it</td>
-            </tr>
-            <tr>
-              <td><code>eas-notice-seen</code></td>
-              <td>Local storage</td>
-              <td><code>1</code></td>
-              <td>Stops the storage notice showing on every visit</td>
               <td>Never, until you clear it</td>
             </tr>
           </tbody>
@@ -60,9 +54,9 @@ export default function CookiesPage() {
         necessary for a service the user asked for.
       </p>
       <p>
-        Both values above fall inside that exception. They exist only to honour a choice you
-        made, they hold no identifier, they are never transmitted, and they cannot be used to
-        recognise you here or anywhere else. Blocking them changes nothing except that the site
+        The value above falls inside that exception. It exists only to honour a choice you
+        made, it holds no identifier, it is never transmitted, and it cannot be used to
+        recognise you here or anywhere else. Blocking it changes nothing except that the site
         forgets your appearance choice.
       </p>
       <p>

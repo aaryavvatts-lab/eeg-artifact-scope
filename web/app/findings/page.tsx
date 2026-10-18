@@ -9,8 +9,7 @@ export const metadata = {
 
 export default function FindingsPage() {
   return (
-    <div className="wrap section prose">
-      <p className="eyebrow">Four tests · two of them failed</p>
+    <div className="wrap section page-head prose">
       <h1>What held up, and what did not</h1>
       <p className="lede">
         A tool that grades other people&rsquo;s data has to show its own working. This page has

@@ -6,19 +6,19 @@ export const metadata = {
     'What this site collects, what it stores, and what happens to any EEG file you open with it.',
 };
 
-export const UPDATED = '29 August 2026';
+export const UPDATED = '18 October 2026';
 
 export default function PrivacyPage() {
   return (
-    <div className="wrap section prose narrow">
-      <p className="eyebrow">Last updated {UPDATED}</p>
+    <div className="wrap section page-head prose narrow">
+      <p className="updated">Last updated {UPDATED}</p>
       <h1>Privacy</h1>
 
       <h2>The short version</h2>
       <p>
         There are no accounts, no sign in, no analytics and no advertising. Nothing you type or
-        load is sent to a server. Two small values are saved in your own browser: whether you
-        chose light or dark, and whether you closed the storage notice.
+        load is sent to a server. One small value is saved in your own browser, and only if you
+        press the Light or Dark control: whether you chose light or dark.
       </p>
       <p>
         The longer version below spells out what that means, because a claim like that is worth
@@ -61,7 +61,8 @@ export default function PrivacyPage() {
 
       <h2>What is stored on your device</h2>
       <p>
-        Two values in your browser&rsquo;s local storage. No cookies are set by this site at all.
+        One value in your browser&rsquo;s local storage, and only if you press the Light or Dark
+        control in the header. No cookies are set by this site at all.
       </p>
       <div className="scroll">
         <table>
@@ -75,23 +76,17 @@ export default function PrivacyPage() {
           </thead>
           <tbody>
             <tr>
-              <td><code>eas-theme</code></td>
+              <td><code>theme</code></td>
               <td><code>light</code> or <code>dark</code></td>
               <td>Keeps your appearance choice between visits</td>
-              <td>Until you clear it</td>
-            </tr>
-            <tr>
-              <td><code>eas-notice-seen</code></td>
-              <td><code>1</code></td>
-              <td>Stops the storage notice reappearing every visit</td>
               <td>Until you clear it</td>
             </tr>
           </tbody>
         </table>
       </div>
       <p>
-        Neither identifies you. Neither is sent anywhere. Both are removed if you clear site data
-        in your browser settings, and the site works normally without them.
+        It does not identify you and is not sent anywhere. It is removed if you clear site data
+        in your browser settings, and the site works normally without it.
       </p>
       <p>
         More detail is on the <Link href="/cookies">cookies and storage page</Link>.

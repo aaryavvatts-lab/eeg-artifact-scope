@@ -10,8 +10,7 @@ export const metadata = {
 
 export default function CheckPage() {
   return (
-    <div className="wrap section">
-      <p className="eyebrow">The tool</p>
+    <div className="wrap section page-head">
       <h1>Check a recording</h1>
       <p className="lede">
         Drop in an EEG file. You will get back what was found, when it happened, which

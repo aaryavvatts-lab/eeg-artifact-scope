@@ -9,8 +9,7 @@ export const metadata = {
 
 export default function BlinkPage() {
   return (
-    <div className="wrap section">
-      <p className="eyebrow">1,477 real blinks · 4 headsets · 30 people</p>
+    <div className="wrap section page-head">
       <h1>What a blink actually does</h1>
       <p className="lede">
         Everyone who works with EEG is told that blinks are a problem. Fewer people have seen

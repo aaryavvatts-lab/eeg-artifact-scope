@@ -9,8 +9,7 @@ export const metadata = {
 
 export default function DevicesPage() {
   return (
-    <div className="wrap section">
-      <p className="eyebrow">Same person · same second · five headsets</p>
+    <div className="wrap section page-head">
       <h1>How the hardware holds up</h1>
       <p className="lede">
         Comparing EEG headsets is normally guesswork, because two people wearing two headsets

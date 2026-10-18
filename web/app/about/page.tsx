@@ -7,8 +7,7 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="wrap section prose narrow">
-      <p className="eyebrow">About</p>
+    <div className="wrap section page-head prose narrow">
       <h1>About this project</h1>
 
       <p className="lede">

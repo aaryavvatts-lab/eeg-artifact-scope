@@ -140,7 +140,7 @@ export default function Analyzer() {
           <ul className="steps">
             {STEPS.map(([key, label], i) => (
               <li key={key} className={i < stepIndex ? 'done' : i === stepIndex ? 'active' : ''}>
-                {i < stepIndex ? '✓' : i === stepIndex ? '▸' : '·'} {label}
+                {i < stepIndex ? 'done: ' : i === stepIndex ? 'now: ' : ''}{label}
                 {i === stepIndex && detail ? `, ${detail.toLowerCase()}` : ''}
               </li>
             ))}
@@ -165,7 +165,7 @@ export default function Analyzer() {
             <summary style={{ cursor: 'pointer', fontSize: 13.5, color: 'var(--ink-3)' }}>
               Technical detail
             </summary>
-            <pre style={{ fontSize: 11.5, overflowX: 'auto', color: 'var(--ink-3)' }}>
+            <pre style={{ fontSize: 13.5, overflowX: 'auto', color: 'var(--ink-3)' }}>
               {error.detail}
             </pre>
           </details>
@@ -447,8 +447,8 @@ function Timeline({ analysis }: { analysis: Analysis }) {
                     <title>{`${lane.label} at ${e.onset.toFixed(1)} s, lasting ${e.duration.toFixed(2)} s`}</title>
                   </rect>
                 ))}
-                <text x="7" y={y + laneH - 6} fontSize="11" fill="var(--ink-2)"
-                      fontFamily="var(--mono)"
+                <text x="7" y={y + laneH - 6} fontSize="13" fill="var(--ink-2)"
+                      fontFamily="inherit"
                       style={{ paintOrder: 'stroke', stroke: 'var(--panel-2)', strokeWidth: 3 }}>
                   {lane.label}, {lane.events.length}
                 </text>
@@ -457,8 +457,8 @@ function Timeline({ analysis }: { analysis: Analysis }) {
           })}
         </svg>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5,
-                    color: 'var(--ink-3)', fontFamily: 'var(--mono)', marginTop: 4 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5,
+                    color: 'var(--ink-3)', fontFamily: 'inherit', marginTop: 4 }}>
         <span>0 s</span>
         <span>{duration.toFixed(0)} s</span>
       </div>

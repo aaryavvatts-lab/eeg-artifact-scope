@@ -99,9 +99,9 @@ export function LineChart({
                 x={pad.l - 8}
                 y={sy(t) + 4}
                 textAnchor="end"
-                fontSize="11"
+                fontSize="13"
                 fill="var(--ink-3)"
-                fontFamily="var(--mono)"
+                fontFamily="inherit"
               >
                 {fmt(t)}
               </text>
@@ -114,9 +114,9 @@ export function LineChart({
               x={sx(t)}
               y={height - pad.b + 17}
               textAnchor="middle"
-              fontSize="11"
+              fontSize="13"
               fill="var(--ink-3)"
-              fontFamily="var(--mono)"
+              fontFamily="inherit"
             >
               {fmt(t)}
             </text>
@@ -136,9 +136,9 @@ export function LineChart({
               <text
                 x={sx(m.x) + 5}
                 y={pad.t + 12}
-                fontSize="10.5"
+                fontSize="13"
                 fill={m.color ?? 'var(--highlight)'}
-                fontFamily="var(--mono)"
+                fontFamily="inherit"
               >
                 {m.label}
               </text>
@@ -171,7 +171,7 @@ export function LineChart({
             x={(W - pad.l) / 2 + pad.l / 2}
             y={height - 4}
             textAnchor="middle"
-            fontSize="11.5"
+            fontSize="13"
             fill="var(--ink-3)"
           >
             {xLabel}
@@ -181,7 +181,7 @@ export function LineChart({
             x="12"
             y={height / 2}
             textAnchor="middle"
-            fontSize="11.5"
+            fontSize="13"
             fill="var(--ink-3)"
           >
             {yLabel}
@@ -280,13 +280,13 @@ export function BandChart({
           {ticksY.map((t) => (
             <g key={t}>
               <line x1={pad.l} x2={W - pad.r} y1={sy(t)} y2={sy(t)} stroke="var(--line-soft)" />
-              <text x={pad.l - 8} y={sy(t) + 4} textAnchor="end" fontSize="11"
-                    fill="var(--ink-3)" fontFamily="var(--mono)">{fmt(t)}</text>
+              <text x={pad.l - 8} y={sy(t) + 4} textAnchor="end" fontSize="13"
+                    fill="var(--ink-3)" fontFamily="inherit">{fmt(t)}</text>
             </g>
           ))}
           {ticksX.map((t) => (
-            <text key={t} x={sx(t)} y={height - pad.b + 17} textAnchor="middle" fontSize="11"
-                  fill="var(--ink-3)" fontFamily="var(--mono)">{fmt(t)}</text>
+            <text key={t} x={sx(t)} y={height - pad.b + 17} textAnchor="middle" fontSize="13"
+                  fill="var(--ink-3)" fontFamily="inherit">{fmt(t)}</text>
           ))}
 
           <path d={area} fill={color} opacity="0.16" />
@@ -297,9 +297,9 @@ export function BandChart({
           <line x1={pad.l} x2={W - pad.r} y1={sy(0)} y2={sy(0)} stroke="var(--line)" strokeDasharray="2 3" />
 
           <text x={(W - pad.l) / 2 + pad.l / 2} y={height - 4} textAnchor="middle"
-                fontSize="11.5" fill="var(--ink-3)">{xLabel}</text>
+                fontSize="13" fill="var(--ink-3)">{xLabel}</text>
           <text transform={`rotate(-90 12 ${height / 2})`} x="12" y={height / 2}
-                textAnchor="middle" fontSize="11.5" fill="var(--ink-3)">{yLabel}</text>
+                textAnchor="middle" fontSize="13" fill="var(--ink-3)">{yLabel}</text>
         </svg>
       </div>
       {caption && <figcaption>{caption}</figcaption>}
@@ -353,8 +353,8 @@ export function TraceStrip({
               <g key={c.name}>
                 {i > 0 && <line x1="0" x2={W} y1={i * height} y2={i * height} stroke="var(--line-soft)" />}
                 <path d={d} stroke={color} strokeWidth="0.75" fill="none" opacity="0.9" />
-                <text x="5" y={i * height + 12} fontSize="10" fill="var(--ink-3)"
-                      fontFamily="var(--mono)"
+                <text x="5" y={i * height + 12} fontSize="13" fill="var(--ink-3)"
+                      fontFamily="inherit"
                       style={{ paintOrder: 'stroke', stroke: 'var(--panel)', strokeWidth: 3 }}>
                   {c.name}
                 </text>
@@ -363,8 +363,8 @@ export function TraceStrip({
           })}
         </svg>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11,
-                    color: 'var(--ink-3)', fontFamily: 'var(--mono)', marginTop: 3 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13,
+                    color: 'var(--ink-3)', fontFamily: 'inherit', marginTop: 3 }}>
         <span>0 s</span>
         <span>peak {peak.toFixed(0)} µV</span>
         <span>{durationS.toFixed(0)} s</span>
@@ -395,7 +395,7 @@ export function BarChart({
           <div key={it.label} style={{ marginBottom: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginBottom: 3 }}>
               <span>{it.label}</span>
-              <span style={{ fontFamily: 'var(--mono)', color: 'var(--ink-2)' }}>
+              <span style={{ fontFamily: 'inherit', color: 'var(--ink-2)' }}>
                 {fmt(it.value)}{unit}
               </span>
             </div>
@@ -404,7 +404,7 @@ export function BarChart({
                             background: it.color ?? 'var(--accent)', borderRadius: 5 }} />
             </div>
             {it.note && (
-              <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 2 }}>{it.note}</div>
+              <div style={{ fontSize: 13.5, color: 'var(--ink-3)', marginTop: 2 }}>{it.note}</div>
             )}
           </div>
         ))}

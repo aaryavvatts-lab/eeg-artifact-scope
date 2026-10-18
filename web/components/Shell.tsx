@@ -2,186 +2,135 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import ThemeToggle from '@/components/ThemeToggle';
 
-const NAV = [
+const TOOLS = [
   { href: '/check', label: 'Check a file' },
   { href: '/blink', label: 'What a blink does' },
   { href: '/devices', label: 'Headsets' },
+];
+const READ = [
   { href: '/findings', label: 'Findings' },
   { href: '/methods', label: 'Methods' },
   { href: '/data', label: 'Data' },
   { href: '/about', label: 'About' },
 ];
-
-const THEME_KEY = 'eas-theme';
-const NOTICE_KEY = 'eas-notice-seen';
-
-function Wave() {
-  return (
-    <svg width="26" height="18" viewBox="0 0 26 18" fill="none" aria-hidden="true">
-      <path
-        d="M1 9h3.4l1.9-6.5L9.5 15l2.6-9 2.2 5.2L16.6 9H25"
-        stroke="var(--accent)"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+const LEGAL = [
+  { href: '/privacy', label: 'Privacy' },
+  { href: '/terms', label: 'Terms of use' },
+  { href: '/cookies', label: 'Cookies and storage' },
+  { href: '/accessibility', label: 'Accessibility' },
+];
+const BAR = [
+  { href: '/check', label: 'Check a file' },
+  { href: '/blink', label: 'What a blink does' },
+  { href: '/devices', label: 'Headsets' },
+  { href: '/findings', label: 'Findings' },
+];
 
 export function SiteHeader() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark' | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(THEME_KEY);
-    if (saved === 'light' || saved === 'dark') {
-      setTheme(saved);
-      document.documentElement.setAttribute('data-theme', saved);
-    }
-  }, []);
+  const sheetRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => setOpen(false), [path]);
+  useEffect(() => {
+    if (!open) { document.body.style.overflow = ''; return; }
+    document.body.style.overflow = 'hidden';
+    sheetRef.current?.querySelector<HTMLElement>('a, button')?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setOpen(false); toggleRef.current?.focus(); }
+      if (e.key === 'Tab' && sheetRef.current) {
+        const f = sheetRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
+        if (!f.length) return;
+        const a = f[0], z = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+        else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+      }
+    };
+    const mq = window.matchMedia('(min-width: 48em)');
+    const onWide = (m: MediaQueryListEvent) => { if (m.matches) setOpen(false); };
+    document.addEventListener('keydown', onKey);
+    mq.addEventListener('change', onWide);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      mq.removeEventListener('change', onWide);
+      document.body.style.overflow = '';
+    };
+  }, [open]);
 
-  function toggle() {
-    const current =
-      theme ??
-      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    const next = current === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem(THEME_KEY, next);
-  }
+  const cur = (href: string) => (path === href ? 'page' : undefined);
+  let i = 0;
+  const item = (l: { href: string; label: string }) => (
+    <Link key={l.href} href={l.href} aria-current={cur(l.href)} style={{ ['--i' as string]: i++ }}>{l.label}</Link>
+  );
 
   return (
-    <header className="hdr">
-      <div className="wrap hdr-in">
-        <Link href="/" className="brand">
-          <Wave />
-          EEG Artifact Scope
-        </Link>
-
-        <nav className={`nav${open ? ' open' : ''}`} aria-label="Main">
-          {NAV.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              aria-current={path === n.href ? 'page' : undefined}
-            >
-              {n.label}
-            </Link>
-          ))}
+    <>
+      <header className="wrap bar">
+        <Link href="/" className="bar__mark">EEG Artifact Scope</Link>
+        <nav className="bar__links" aria-label="Site">
+          {BAR.map((l) => <Link key={l.href} href={l.href} aria-current={cur(l.href)}>{l.label}</Link>)}
+          <ThemeToggle />
         </nav>
+        <div className="bar__phone">
+          <ThemeToggle />
+          <button ref={toggleRef} type="button" className="textbtn" onClick={() => setOpen((v) => !v)}
+            aria-expanded={open} aria-controls="menu">
+            Menu
+          </button>
+        </div>
+      </header>
 
-        <button
-          className="iconbtn menubtn"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-label={open ? 'Close menu' : 'Open menu'}
-        >
-          {open ? '✕' : '☰'}
-        </button>
-
-        <button
-          className="iconbtn"
-          onClick={toggle}
-          aria-label="Switch between light and dark"
-          title="Switch between light and dark"
-        >
-          {theme === 'dark' ? '☀' : '☽'}
-        </button>
-      </div>
-    </header>
+      <nav id="menu" ref={sheetRef} className="sheet" hidden={!open} aria-label="Menu">
+        <div className="sheet__top">
+          <span className="bar__mark">EEG Artifact Scope</span>
+          <button type="button" className="textbtn" onClick={() => { setOpen(false); toggleRef.current?.focus(); }}>Close</button>
+        </div>
+        <div className="sheet__cols">
+          <div><p>The tool</p>{TOOLS.map(item)}</div>
+          <div>
+            <p>The work</p>
+            {item({ href: '/', label: 'Home' })}
+            {READ.map(item)}
+            <p style={{ marginTop: '1.2rem' }}>Legal</p>
+            {LEGAL.map(item)}
+          </div>
+        </div>
+        <p className="small" style={{ color: 'var(--muted)' }}>A student research project, not a medical device.</p>
+      </nav>
+    </>
   );
 }
 
 export function SiteFooter() {
   return (
-    <footer className="ftr">
-      <div className="wrap">
-        <div className="ftr-grid">
-          <div>
-            <h4>The tool</h4>
-            <ul>
-              <li><Link href="/check">Check a file</Link></li>
-              <li><Link href="/blink">What a blink does</Link></li>
-              <li><Link href="/devices">Headset comparison</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4>The work</h4>
-            <ul>
-              <li><Link href="/findings">Findings</Link></li>
-              <li><Link href="/methods">Methods</Link></li>
-              <li><Link href="/data">Data sources</Link></li>
-              <li><Link href="/about">About</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4>Legal</h4>
-            <ul>
-              <li><Link href="/privacy">Privacy</Link></li>
-              <li><Link href="/terms">Terms of use</Link></li>
-              <li><Link href="/cookies">Cookies and storage</Link></li>
-              <li><Link href="/accessibility">Accessibility</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4>Code</h4>
-            <ul>
-              <li>
-                <a href="https://github.com/aaryavvatts-lab/eeg-artifact-scope">
-                  Source on GitHub
-                </a>
-              </li>
-              <li>
-                <a href="https://github.com/aaryavvatts-lab/eeg-artifact-scope/blob/main/SCORECARD.md">
-                  Validation scorecard
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <p className="fine">
-          This is a student research project, not a medical device. It is not approved
-          by any regulator and must not be used to diagnose, treat, or make decisions
-          about any person. Nothing you load here is uploaded. See the{' '}
-          <Link href="/terms">terms of use</Link> before relying on any number it gives you.
-        </p>
-      </div>
-    </footer>
-  );
-}
-
-export function CookieNotice() {
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    if (!localStorage.getItem(NOTICE_KEY)) setShow(true);
-  }, []);
-
-  if (!show) return null;
-
-  return (
-    <div className="cookie" role="region" aria-label="Storage notice">
+    <footer className="wrap close">
+      <p className="close__mark">EEG Artifact Scope</p>
       <p>
-        This site has no tracking or advertising cookies. It saves two things in your
-        browser: whether you picked light or dark, and that you closed this box.{' '}
-        <Link href="/cookies">What gets stored</Link>
+        This is a student research project, not a medical device. It is not approved by any
+        regulator and must not be used to diagnose, treat, or make decisions about any person.
+        Nothing you load here is uploaded. See the <Link href="/terms">terms of use</Link> before
+        relying on any number it gives you.
       </p>
-      <button
-        className="btn"
-        onClick={() => {
-          localStorage.setItem(NOTICE_KEY, '1');
-          setShow(false);
-        }}
-      >
-        Got it
-      </button>
-    </div>
+      <nav className="close__meta" aria-label="The tool">
+        {TOOLS.map((l) => <Link key={l.href} href={l.href}>{l.label}</Link>)}
+      </nav>
+      <nav className="close__meta" aria-label="The work, legal and code">
+        {READ.map((l) => <Link key={l.href} href={l.href}>{l.label}</Link>)}
+        {LEGAL.map((l) => <Link key={l.href} href={l.href}>{l.label}</Link>)}
+        <a href="https://github.com/aaryavvatts-lab/eeg-artifact-scope">Source on GitHub</a>
+        <a href="https://github.com/aaryavvatts-lab/eeg-artifact-scope/blob/main/SCORECARD.md">Validation scorecard</a>
+      </nav>
+      <p className="small" style={{ color: 'var(--muted)' }}>
+        Pictures: the blink, spectrum and artifact figures are drawn from this project&apos;s own
+        data files. The EEG cap photograph is{' '}
+        <a href="https://commons.wikimedia.org/wiki/File:Iss030e116908.jpg">astronaut Andr&eacute; Kuipers
+        wearing an electrode cap</a>, NASA, public domain, via Wikimedia Commons. Type is Erode by
+        Indian Type Foundry, under the ITF Free Font License, served from this site.
+      </p>
+    </footer>
   );
 }

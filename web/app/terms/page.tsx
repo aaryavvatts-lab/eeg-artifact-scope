@@ -8,8 +8,8 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="wrap section prose narrow">
-      <p className="eyebrow">Last updated 29 August 2026</p>
+    <div className="wrap section page-head prose narrow">
+      <p className="updated">Last updated 18 October 2026</p>
       <h1>Terms of use</h1>
 
       <h2>The short version</h2>
